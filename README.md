@@ -30,6 +30,16 @@ const { messages, sendMessage, isLoading } = useAIChat({
   provider: 'claude',
 });
 ```
+## ⚠️ Security Note
+
+Never expose your API key in client-side code. Use a backend proxy or environment variables:
+
+```bash
+# .env
+ANTHROPIC_API_KEY=your-key-here
+```
+
+Then fetch responses through your own backend endpoint.
 
 ## Providers
 
