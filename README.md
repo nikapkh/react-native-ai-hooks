@@ -1,3 +1,8 @@
+[![npm downloads](https://img.shields.io/npm/dw/react-native-ai-hooks)](https://npmjs.com/package/react-native-ai-hooks)
+[![npm version](https://img.shields.io/npm/v/react-native-ai-hooks)](https://npmjs.com/package/react-native-ai-hooks)
+[![GitHub stars](https://img.shields.io/github/stars/nikapkh/react-native-ai-hooks)](https://github.com/nikapkh/react-native-ai-hooks)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 # react-native-ai-hooks
 
 AI hooks for React Native — add Claude, OpenAI & Gemini to your app in minutes.
