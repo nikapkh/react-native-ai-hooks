@@ -1,47 +1,20 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useRef, useMemo } from 'react';
+import type { UseImageAnalysisOptions, UseImageAnalysisReturn } from '../types';
+import { createProvider } from '../utils/providerFactory';
 
-interface UseImageAnalysisOptions {
-  apiKey: string;
-  model?: string;
-  maxTokens?: number;
-  system?: string;
-  uriToBase64?: (uri: string) => Promise<string>;
-}
-
-interface AnalyzeImageInput {
-  image: string;
-  mediaType?: string;
-  prompt?: string;
-}
-
-interface UseImageAnalysisReturn {
-  description: string;
-  isLoading: boolean;
-  error: string | null;
-  analyzeImage: (input: AnalyzeImageInput) => Promise<string | null>;
-  clearDescription: () => void;
-}
-
-interface ParsedImageData {
-  base64: string;
-  mediaType: string;
-}
+const DEFAULT_MODEL_MAP = {
+  anthropic: 'claude-sonnet-4-20250514',
+  openai: 'gpt-4-vision',
+  gemini: 'gemini-pro-vision',
+};
 
 const DATA_URI_REGEX = /^data:(image\/[a-zA-Z0-9.+-]+);base64,(.*)$/;
 
 function getMediaTypeFromUri(uri: string): string {
   const normalized = uri.toLowerCase();
-
-  if (normalized.includes('.png')) {
-    return 'image/png';
-  }
-  if (normalized.includes('.webp')) {
-    return 'image/webp';
-  }
-  if (normalized.includes('.gif')) {
-    return 'image/gif';
-  }
-
+  if (normalized.includes('.png')) return 'image/png';
+  if (normalized.includes('.webp')) return 'image/webp';
+  if (normalized.includes('.gif')) return 'image/gif';
   return 'image/jpeg';
 }
 
@@ -56,7 +29,7 @@ function arrayBufferToBase64(buffer: ArrayBuffer): string {
   }
 
   if (typeof btoa !== 'function') {
-    throw new Error('Base64 conversion is unavailable. Provide uriToBase64 in hook options.');
+    throw new Error('Base64 conversion unavailable. Provide uriToBase64 in hook options.');
   }
 
   return btoa(binary);
@@ -77,21 +50,31 @@ export function useImageAnalysis(options: UseImageAnalysisOptions): UseImageAnal
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const isMountedRef = useRef(true);
+
+  const providerConfig = useMemo(
+    () => ({
+      provider: (options.provider || 'anthropic') as 'anthropic' | 'openai' | 'gemini',
+      apiKey: options.apiKey,
+      model: options.model || DEFAULT_MODEL_MAP[options.provider || 'anthropic'],
+      baseUrl: options.baseUrl,
+      timeout: options.timeout,
+      maxRetries: options.maxRetries,
+    }),
+    [options],
+  );
+
   const normalizeImage = useCallback(
-    async (image: string, mediaType?: string): Promise<ParsedImageData> => {
+    async (image: string, mediaType?: string): Promise<{ base64: string; mediaType: string }> => {
       const dataUriMatch = image.match(DATA_URI_REGEX);
       if (dataUriMatch) {
-        const matchedMediaType = dataUriMatch[1];
-        const base64Data = dataUriMatch[2];
         return {
-          base64: base64Data,
-          mediaType: mediaType || matchedMediaType,
+          base64: dataUriMatch[2],
+          mediaType: mediaType || dataUriMatch[1],
         };
       }
 
-      const isLikelyUri = /^(https?:\/\/|file:\/\/|content:\/\/|ph:\/\/|assets-library:\/\/)/i.test(
-        image,
-      );
+      const isLikelyUri = /^(https?:\/\/|file:\/\/|content:\/\/|ph:\/\/|assets-library:\/\/)/i.test(image);
 
       if (isLikelyUri) {
         const toBase64 = options.uriToBase64 || defaultUriToBase64;
@@ -116,24 +99,39 @@ export function useImageAnalysis(options: UseImageAnalysisOptions): UseImageAnal
   }, []);
 
   const analyzeImage = useCallback(
-    async (input: AnalyzeImageInput) => {
-      setIsLoading(true);
+    async (uri: string, prompt?: string) => {
+      if (!uri) {
+        setError('Image URI is required');
+        return null;
+      }
+
+      if (!options.apiKey) {
+        setError('Missing API key');
+        return null;
+      }
+
       setError(null);
+      setIsLoading(true);
 
       try {
-        const parsedImage = await normalizeImage(input.image, input.mediaType);
+        const imagData = await normalizeImage(uri);
+        const analysisPrompt = prompt || 'Describe this image in detail.';
 
-        const apiResponse = await fetch('https://api.anthropic.com/v1/messages', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-api-key': options.apiKey,
-            'anthropic-version': '2023-06-01',
-          },
-          body: JSON.stringify({
-            model: options.model || 'claude-sonnet-4-20250514',
+        const base_url = providerConfig.baseUrl || 'https://api.anthropic.com';
+        const headers: Record<string, string> = {
+          'Content-Type': 'application/json',
+        };
+
+        let url = '';
+        let body: Record<string, unknown> = {};
+
+        if (providerConfig.provider === 'anthropic') {
+          url = `${base_url}/v1/messages`;
+          headers['x-api-key'] = options.apiKey;
+          headers['anthropic-version'] = '2023-06-01';
+          body = {
+            model: providerConfig.model,
             max_tokens: options.maxTokens ?? 1024,
-            system: options.system,
             messages: [
               {
                 role: 'user',
@@ -142,46 +140,95 @@ export function useImageAnalysis(options: UseImageAnalysisOptions): UseImageAnal
                     type: 'image',
                     source: {
                       type: 'base64',
-                      media_type: parsedImage.mediaType,
-                      data: parsedImage.base64,
+                      media_type: imagData.mediaType,
+                      data: imagData.base64,
                     },
                   },
                   {
                     type: 'text',
-                    text: input.prompt || 'Describe this image in detail.',
+                    text: analysisPrompt,
                   },
                 ],
               },
             ],
-          }),
+          };
+        } else if (providerConfig.provider === 'openai') {
+          url = `${providerConfig.baseUrl || 'https://api.openai.com'}/v1/chat/completions`;
+          headers.Authorization = `Bearer ${options.apiKey}`;
+          body = {
+            model: providerConfig.model,
+            max_tokens: options.maxTokens ?? 1024,
+            messages: [
+              {
+                role: 'user',
+                content: [
+                  {
+                    type: 'image_url',
+                    image_url: {
+                      url: `data:${imagData.mediaType};base64,${imagData.base64}`,
+                    },
+                  },
+                  {
+                    type: 'text',
+                    text: analysisPrompt,
+                  },
+                ],
+              },
+            ],
+          };
+        } else {
+          throw new Error(`Image analysis not supported for provider: ${providerConfig.provider}`);
+        }
+
+        const response = await fetch(url, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(body),
         });
 
-        if (!apiResponse.ok) {
-          const errorText = await apiResponse.text();
-          throw new Error(errorText || `Claude API error: ${apiResponse.status}`);
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(errorText || `API error: ${response.status}`);
         }
 
-        const data = await apiResponse.json();
-        const textResult = data?.content?.find?.(
-          (item: { type?: string; text?: string }) => item?.type === 'text',
-        )?.text;
+        const data = await response.json();
+        let resultText = '';
 
-        if (!textResult) {
-          throw new Error('No description returned from Claude vision API.');
+        if (providerConfig.provider === 'anthropic') {
+          resultText = data?.content?.[0]?.text || '';
+        } else if (providerConfig.provider === 'openai') {
+          resultText = data?.choices?.[0]?.message?.content || '';
         }
 
-        setDescription(textResult);
-        return textResult;
+        if (!resultText) {
+          throw new Error('No description returned by vision API');
+        }
+
+        if (isMountedRef.current) {
+          setDescription(resultText);
+        }
+        return resultText;
       } catch (err) {
-        const message = (err as Error).message || 'Failed to analyze image';
-        setError(message);
+        if (isMountedRef.current) {
+          const message = err instanceof Error ? err.message : 'Failed to analyze image';
+          setError(message);
+        }
         return null;
       } finally {
-        setIsLoading(false);
+        if (isMountedRef.current) {
+          setIsLoading(false);
+        }
       }
     },
-    [normalizeImage, options],
+    [normalizeImage, options, providerConfig],
   );
+
+  useState(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   return {
     description,
