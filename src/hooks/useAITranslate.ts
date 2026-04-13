@@ -62,6 +62,15 @@ function parseJsonFromText<T>(text: string): T {
   return JSON.parse(candidate) as T;
 }
 
+/**
+ * Translates source text into a target language with optional automatic debounced translation.
+ *
+ * @param options Translation configuration including API key, model/system settings,
+ * temperature/token controls, initial target language, and auto-translate behavior.
+ * @returns Translation state with source/translated text, detected source language,
+ * target language, status/error flags, and actions to update text/language, translate,
+ * or reset translation state.
+ */
 export function useAITranslate(options: UseAITranslateOptions): UseAITranslateReturn {
   const [sourceText, setSourceText] = useState('');
   const [translatedText, setTranslatedText] = useState('');

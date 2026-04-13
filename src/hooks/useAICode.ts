@@ -57,6 +57,14 @@ function getClaudeTextContent(data: unknown): string {
     .trim();
 }
 
+/**
+ * Generates and explains code using an AI model while tracking language and request state.
+ *
+ * @param options Code assistant configuration including API key, model/system prompt,
+ * token/temperature controls, and default programming language.
+ * @returns Code assistant state with selected language, generated code, explanation text,
+ * loading/error indicators, and actions to generate code, explain code, or clear outputs.
+ */
 export function useAICode(options: UseAICodeOptions): UseAICodeReturn {
   const [language, setLanguage] = useState(options.defaultLanguage || 'typescript');
   const [generatedCode, setGeneratedCode] = useState('');

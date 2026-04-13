@@ -15,6 +15,14 @@ function parseJsonFromText<T>(text: string): T {
   return JSON.parse(candidate) as T;
 }
 
+/**
+ * Validates form payloads using an AI model and returns structured validation errors.
+ *
+ * @param options Validation configuration including provider, API key, model, transport
+ * settings, and generation controls used when composing validation prompts.
+ * @returns Form validation state containing the latest validation result,
+ * loading/error indicators, and actions to validate data or clear prior results.
+ */
 export function useAIForm(options: UseAIFormOptions): UseAIFormReturn {
   const [validationResult, setValidationResult] = useState<FormValidationResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);

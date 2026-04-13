@@ -8,6 +8,15 @@ const DEFAULT_MODEL_MAP = {
   gemini: 'gemini-pro',
 };
 
+/**
+ * Streams AI responses token-by-token and exposes incremental output state.
+ *
+ * @param options Stream configuration including provider, API key, model, base URL,
+ * timeout/retry controls, and generation settings such as system prompt, temperature,
+ * and max tokens.
+ * @returns Stream state with accumulated response text, loading/error flags, and actions
+ * to start streaming, abort an in-flight stream, or clear the current response.
+ */
 export function useAIStream(options: UseAIStreamOptions): UseAIStreamReturn {
   const [response, setResponse] = useState('');
   const [isLoading, setIsLoading] = useState(false);

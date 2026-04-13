@@ -58,6 +58,14 @@ function getClaudeTextContent(data: unknown): string {
 		.trim();
 }
 
+/**
+ * Handles speech-to-text capture and optional AI response generation from transcribed speech.
+ *
+ * @param options Voice hook configuration including API key, model settings, recognition
+ * language, and whether transcription should be auto-sent after recording stops.
+ * @returns Voice interaction state with transcription/response values, recording and loading
+ * indicators, error state, and actions to start/stop recording, send transcription, and clear state.
+ */
 export function useAIVoice(options: UseAIVoiceOptions): UseAIVoiceReturn {
 	const [transcription, setTranscription] = useState('');
 	const [response, setResponse] = useState('');

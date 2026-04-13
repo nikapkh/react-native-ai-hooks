@@ -8,6 +8,14 @@ const DEFAULT_MODEL_MAP = {
   gemini: 'gemini-pro',
 };
 
+/**
+ * Manages conversational chat state and sends prompts to the configured AI provider.
+ *
+ * @param options Hook configuration including provider, API key, model, retry/timeout settings,
+ * and generation options such as system prompt, temperature, and max tokens.
+ * @returns Chat controller with current messages, loading/error state, and actions to send,
+ * abort, or clear chat messages.
+ */
 export function useAIChat(options: UseAIChatOptions): UseAIChatReturn {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);

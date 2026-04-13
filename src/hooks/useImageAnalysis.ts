@@ -45,6 +45,14 @@ async function defaultUriToBase64(uri: string): Promise<string> {
   return arrayBufferToBase64(imageBuffer);
 }
 
+/**
+ * Analyzes an image with a vision-capable model and stores the generated description.
+ *
+ * @param options Vision configuration including provider credentials, model selection,
+ * request limits, and optional URI-to-base64 conversion for React Native environments.
+ * @returns Image analysis state with the latest description, loading/error flags, and
+ * actions to analyze a new image or clear the stored description.
+ */
 export function useImageAnalysis(options: UseImageAnalysisOptions): UseImageAnalysisReturn {
   const [description, setDescription] = useState('');
   const [isLoading, setIsLoading] = useState(false);

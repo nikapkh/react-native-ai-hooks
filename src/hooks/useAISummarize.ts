@@ -63,6 +63,14 @@ function lengthInstruction(length: SummaryLength): string {
   return 'Produce a balanced summary in 1-2 paragraphs plus a short bullet list of key takeaways.';
 }
 
+/**
+ * Summarizes long-form text with selectable output length (short, medium, or long).
+ *
+ * @param options Summarization configuration including API key, model/system behavior,
+ * token/temperature controls, and default summary length.
+ * @returns Summarization state with current summary text, selected length,
+ * loading/error indicators, and actions to set length, generate summaries, or clear output.
+ */
 export function useAISummarize(options: UseAISummarizeOptions): UseAISummarizeReturn {
   const [summary, setSummary] = useState('');
   const [length, setLength] = useState<SummaryLength>(options.defaultLength || 'medium');
