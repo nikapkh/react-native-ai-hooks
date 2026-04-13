@@ -5,50 +5,121 @@
 
 # react-native-ai-hooks
 
-AI hooks for React Native — add Claude, OpenAI & Gemini to your app in minutes.
+> The missing AI layer for React Native. Add Claude, OpenAI & Gemini to your app in minutes — not days.
 
-## Installation
+No boilerplate. No provider lock-in. Just hooks.
+
+## Why?
+
+Every React Native developer building AI features writes the same code:
+- Fetch setup for each provider
+- Loading/error state management
+- Streaming token handling
+- Image encoding for vision APIs
+- Speech-to-text plumbing
+
+**react-native-ai-hooks does all of this for you.**
+
+## Install
 
 ```bash
 npm install react-native-ai-hooks
 ```
 
-## Hooks
+## 7 Hooks. One API.
 
-- `useAIChat()` — multi-turn chat with streaming
-- `useAIStream()` — real-time token streaming  
-- `useImageAnalysis()` — camera/gallery → AI description
-- `useAIForm()` — AI-powered form validation
-
-## Quick Start
-
+### 💬 useAIChat — multi-turn conversation
 ```tsx
-import { useAIChat } from 'react-native-ai-hooks';
-
-const { messages, sendMessage, isLoading } = useAIChat({
-  apiKey: 'your-api-key',
+const { messages, sendMessage, isLoading, error, clear } = useAIChat({
+  apiKey: process.env.ANTHROPIC_API_KEY,
   provider: 'claude',
 });
 ```
-## ⚠️ Security Note
 
-Never expose your API key in client-side code. Use a backend proxy or environment variables:
-
-```bash
-# .env
-ANTHROPIC_API_KEY=your-key-here
+### ⚡ useAIStream — real-time token streaming
+```tsx
+const { response, streamResponse, abortStream, isLoading } = useAIStream({
+  apiKey: process.env.ANTHROPIC_API_KEY,
+  provider: 'claude',
+});
 ```
 
-Then fetch responses through your own backend endpoint.
+### 👁️ useImageAnalysis — camera & gallery vision
+```tsx
+const { analyzeImage, description, isLoading } = useImageAnalysis({
+  apiKey: process.env.OPENAI_API_KEY,
+  provider: 'openai',
+});
+```
 
-## Providers
+### 📝 useAIForm — intelligent form validation
+```tsx
+const { validateField, autocompleteField, validations } = useAIForm({
+  apiKey: process.env.ANTHROPIC_API_KEY,
+  provider: 'claude',
+});
+```
 
-| Provider | Status |
-|----------|--------|
-| Claude (Anthropic) | ✅ |
-| OpenAI | ✅ |
-| Gemini | 🔜 |
+### 🎙️ useAIVoice — speak, get AI response
+```tsx
+const { startRecording, stopRecording, transcription, response } = useAIVoice({
+  apiKey: process.env.ANTHROPIC_API_KEY,
+  provider: 'claude',
+});
+```
+
+### 🌍 useAITranslate — real-time translation
+```tsx
+const { translate, translatedText, setTargetLanguage } = useAITranslate({
+  apiKey: process.env.ANTHROPIC_API_KEY,
+  provider: 'claude',
+  targetLanguage: 'Spanish',
+});
+```
+
+### 📄 useAISummarize — instant summarization
+```tsx
+const { summarize, summary, isLoading } = useAISummarize({
+  apiKey: process.env.ANTHROPIC_API_KEY,
+  provider: 'claude',
+  length: 'short', // 'short' | 'medium' | 'long'
+});
+```
+
+## Provider Support
+
+| Provider | Chat | Stream | Vision | Voice |
+|----------|------|--------|--------|-------|
+| Claude (Anthropic) | ✅ | ✅ | ✅ | ✅ |
+| OpenAI | ✅ | ✅ | ✅ | ✅ |
+| Gemini | ✅ | ✅ | 🔜 | 🔜 |
+
+## Architecture
+
+- **Unified provider abstraction** — same API regardless of Claude, GPT, or Gemini
+- **Exponential backoff** — automatic retry on rate limits (429) and server errors
+- **AbortController** — cancel in-flight requests instantly
+- **TypeScript-first** — 20+ strict interfaces, no implicit `any`
+- **Zero dependencies** — only React and React Native
+
+## ⚠️ Security
+
+Never expose API keys in client-side code. Use a backend proxy:
+
+```tsx
+// ✅ Safe — proxy your requests
+const { messages, sendMessage } = useAIChat({
+  baseUrl: 'https://your-backend.com/api/ai',
+});
+
+// ❌ Never do this in production
+const { messages } = useAIChat({ apiKey: 'sk-...' });
+```
+
+## Example App
+
+A full example app is included in `/example` — Settings screen, Chat UI, multi-provider switching.
 
 ## License
 
-MIT
+MIT © [nikapkh](https://github.com/nikapkh)
