@@ -1,37 +1,33 @@
-[![npm downloads](https://img.shields.io/npm/dw/react-native-ai-hooks)](https://npmjs.com/package/react-native-ai-hooks)
-[![npm version](https://img.shields.io/npm/v/react-native-ai-hooks)](https://npmjs.com/package/react-native-ai-hooks)
-[![GitHub stars](https://img.shields.io/github/stars/nikapkh/react-native-ai-hooks)](https://github.com/nikapkh/react-native-ai-hooks)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+# React Native AI Hooks
 
-# react-native-ai-hooks
+[![NPM Downloads](https://img.shields.io/npm/dm/react-native-ai-hooks)](https://www.npmjs.com/package/react-native-ai-hooks)
+[![Version](https://img.shields.io/npm/v/react-native-ai-hooks)](https://www.npmjs.com/package/react-native-ai-hooks)
+[![License](https://img.shields.io/badge/license-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Build AI features in React Native without rebuilding the same plumbing every sprint.
+## Architecture Visual
 
-One hooks-first API for Claude, OpenAI, and Gemini.
+<p align="center">
+  <img src="./docs/assets/architecture.png" alt="React Native AI Hooks architecture diagram" width="1100" />
+</p>
+<p align="center">
+  <em>Production flow: App Layer -> Hooks -> ProviderFactory -> fetchWithRetry -> Anthropic, OpenAI, Gemini</em>
+</p>
 
-## Why use this?
+## The Core Problem
 
-Most teams burn time on the same AI integration work:
+Mobile AI is fragile in production. Network volatility, provider rate-limits, and intermittent API failures can degrade UX quickly.
 
-- Provider-specific request/response wiring
-- Retry, timeout, and error edge cases
-- Streaming token parsing
-- State handling for loading, cancellation, and failures
+React Native AI Hooks is the Resilience Layer for those failure modes. It standardizes provider integration, hardens request execution, and gives product teams a clean hooks-first interface so reliability is built in from day one.
 
-This library gives you that foundation out of the box so you can ship product features, not infra glue.
+## What's New in v0.6.0 (The Highlights)
 
-| What you want | What this gives you |
-|---|---|
-| Ship chat quickly | Drop-in hooks with minimal setup |
-| Avoid provider lock-in | Unified interface across providers |
-| Handle real-world failures | Built-in retries, backoff, timeout, abort |
-| Keep code clean | Strong TypeScript types and predictable APIs |
+- Production-Grade Resilience: Exponential backoff plus jitter for 429 and 5xx failures, with retry and timeout controls.
+- Unified Provider Factory: Anthropic, OpenAI, and Gemini behind one standardized API surface.
+- 100% Logic Coverage: Hardened with Jest and continuously verified in GitHub Actions.
 
 ## Quick Start
 
 ```tsx
-// npm install react-native-ai-hooks
-
 import { useAIChat } from 'react-native-ai-hooks';
 
 export function Assistant() {
@@ -41,56 +37,28 @@ export function Assistant() {
     model: 'claude-sonnet-4-20250514',
   });
 
-  // Example action
-  async function onAsk() {
-    await sendMessage('Draft a warm onboarding message for new users.');
+  async function ask() {
+    await sendMessage('Summarize the top product risks from this sprint.');
   }
 
   return null;
 }
 ```
 
-## Hooks
+## Documentation
 
-- 💬 useAIChat: multi-turn conversation
-- ⚡ useAIStream: token streaming
-- 👁️ useImageAnalysis: image and vision workflows
-- 📝 useAIForm: AI-assisted form validation
-- 🎙️ useAIVoice: speech-to-text plus AI response
-- 🌍 useAITranslate: real-time translation
-- 📄 useAISummarize: concise text summaries
-- 🧠 useAICode: generate and explain code
-
-## Provider Support
-
-| Provider | Chat | Stream | Vision | Voice |
-|---|---|---|---|---|
-| Anthropic Claude | ✅ | ✅ | ✅ | ✅ |
-| OpenAI | ✅ | ✅ | ✅ | ✅ |
-| Gemini | ✅ | ✅ | 🔜 | 🔜 |
-
-## Security
-
-Use a backend proxy in production. Do not ship permanent provider API keys in app binaries.
-
-```tsx
-const { sendMessage } = useAIChat({
-  baseUrl: 'https://your-backend.com/api/ai',
-});
-```
-
-## Example App
-
-See [example](./example) for a full app with provider switching, API key settings, and streaming chat.
-
-## Deep Technical Docs
-
-Detailed architecture and implementation references now live in [docs](./docs):
+For deep technical specs and implementation details, see [docs](./docs):
 
 - [Architecture Guide](./docs/ARCHITECTURE_GUIDE.md)
 - [Technical Specification](./docs/TECHNICAL_SPECIFICATION.md)
 - [Implementation Summary](./docs/IMPLEMENTATION_COMPLETE.md)
 - [Internal Architecture Notes](./docs/ARCHITECTURE.md)
+
+## Support
+
+If this project helps your team ship reliable mobile AI features, please consider leaving a star:
+
+[Star react-native-ai-hooks on GitHub](https://github.com/nikapkh/react-native-ai-hooks)
 
 ## License
 
