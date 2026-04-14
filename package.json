@@ -1,6 +1,6 @@
 {
   "name": "react-native-ai-hooks",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "AI hooks for React Native — useAIChat, useAIStream, useImageAnalysis. Works with Claude, OpenAI & Gemini.",
   "main": "src/index.ts",
   "types": "src/index.ts",
