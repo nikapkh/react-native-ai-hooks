@@ -30,6 +30,9 @@ export async function fetchWithRetry(
 
   let lastError: RetryableError | undefined;
 
+  const getBackoffDelay = (attempt: number) =>
+    Math.min(baseDelay * Math.pow(backoffMultiplier, attempt) * (1 + Math.random() * 0.3), maxDelay);
+
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
       const controller = new AbortController();
@@ -41,12 +44,10 @@ export async function fetchWithRetry(
           signal: controller.signal,
         });
 
-        clearTimeout(timeoutId);
-
         // Handle rate limiting
         if (response.status === 429) {
           const retryAfter = response.headers.get('Retry-After');
-          const delay = retryAfter ? parseInt(retryAfter, 10) * 1000 : Math.min(baseDelay * Math.pow(backoffMultiplier, attempt), maxDelay);
+          const delay = retryAfter ? parseInt(retryAfter, 10) * 1000 : getBackoffDelay(attempt);
 
           if (attempt < maxRetries) {
             await new Promise(resolve => setTimeout(resolve, delay));
@@ -56,7 +57,7 @@ export async function fetchWithRetry(
 
         // Handle server errors (5xx) with retry
         if (response.status >= 500 && attempt < maxRetries) {
-          const delay = Math.min(baseDelay * Math.pow(backoffMultiplier, attempt), maxDelay);
+          const delay = getBackoffDelay(attempt);
           await new Promise(resolve => setTimeout(resolve, delay));
           continue;
         }
@@ -73,7 +74,7 @@ export async function fetchWithRetry(
         error.isRetryable = attempt < maxRetries;
 
         if (attempt < maxRetries) {
-          const delay = Math.min(baseDelay * Math.pow(backoffMultiplier, attempt), maxDelay);
+          const delay = getBackoffDelay(attempt);
           await new Promise(resolve => setTimeout(resolve, delay));
           continue;
         }
@@ -81,16 +82,17 @@ export async function fetchWithRetry(
 
       lastError = error;
 
-      // Non-retryable errors should throw immediately
-      if (!error.isRetryable && attempt < maxRetries) {
-        const delay = Math.min(baseDelay * Math.pow(backoffMultiplier, attempt), maxDelay);
+      if (error.isRetryable === false) {
+        throw error;
+      }
+
+      if (attempt < maxRetries) {
+        const delay = getBackoffDelay(attempt);
         await new Promise(resolve => setTimeout(resolve, delay));
         continue;
       }
 
-      if (attempt === maxRetries) {
-        throw error;
-      }
+      throw error;
     }
   }
 

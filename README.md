@@ -5,120 +5,92 @@
 
 # react-native-ai-hooks
 
-> The missing AI layer for React Native. Add Claude, OpenAI & Gemini to your app in minutes — not days.
+Build AI features in React Native without rebuilding the same plumbing every sprint.
 
-No boilerplate. No provider lock-in. Just hooks.
+One hooks-first API for Claude, OpenAI, and Gemini.
 
-## Why?
+## Why use this?
 
-Every React Native developer building AI features writes the same code:
-- Fetch setup for each provider
-- Loading/error state management
-- Streaming token handling
-- Image encoding for vision APIs
-- Speech-to-text plumbing
+Most teams burn time on the same AI integration work:
 
-**react-native-ai-hooks does all of this for you.**
+- Provider-specific request/response wiring
+- Retry, timeout, and error edge cases
+- Streaming token parsing
+- State handling for loading, cancellation, and failures
 
-## Install
+This library gives you that foundation out of the box so you can ship product features, not infra glue.
 
-```bash
-npm install react-native-ai-hooks
-```
+| What you want | What this gives you |
+|---|---|
+| Ship chat quickly | Drop-in hooks with minimal setup |
+| Avoid provider lock-in | Unified interface across providers |
+| Handle real-world failures | Built-in retries, backoff, timeout, abort |
+| Keep code clean | Strong TypeScript types and predictable APIs |
 
-## 7 Hooks. One API.
+## Quick Start
 
-### 💬 useAIChat — multi-turn conversation
 ```tsx
-const { messages, sendMessage, isLoading, error, clear } = useAIChat({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-  provider: 'claude',
-});
+// npm install react-native-ai-hooks
+
+import { useAIChat } from 'react-native-ai-hooks';
+
+export function Assistant() {
+  const { messages, sendMessage, isLoading, error } = useAIChat({
+    provider: 'anthropic',
+    apiKey: process.env.EXPO_PUBLIC_AI_KEY ?? '',
+    model: 'claude-sonnet-4-20250514',
+  });
+
+  // Example action
+  async function onAsk() {
+    await sendMessage('Draft a warm onboarding message for new users.');
+  }
+
+  return null;
+}
 ```
 
-### ⚡ useAIStream — real-time token streaming
-```tsx
-const { response, streamResponse, abortStream, isLoading } = useAIStream({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-  provider: 'claude',
-});
-```
+## Hooks
 
-### 👁️ useImageAnalysis — camera & gallery vision
-```tsx
-const { analyzeImage, description, isLoading } = useImageAnalysis({
-  apiKey: process.env.OPENAI_API_KEY,
-  provider: 'openai',
-});
-```
-
-### 📝 useAIForm — intelligent form validation
-```tsx
-const { validateField, autocompleteField, validations } = useAIForm({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-  provider: 'claude',
-});
-```
-
-### 🎙️ useAIVoice — speak, get AI response
-```tsx
-const { startRecording, stopRecording, transcription, response } = useAIVoice({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-  provider: 'claude',
-});
-```
-
-### 🌍 useAITranslate — real-time translation
-```tsx
-const { translate, translatedText, setTargetLanguage } = useAITranslate({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-  provider: 'claude',
-  targetLanguage: 'Spanish',
-});
-```
-
-### 📄 useAISummarize — instant summarization
-```tsx
-const { summarize, summary, isLoading } = useAISummarize({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-  provider: 'claude',
-  length: 'short', // 'short' | 'medium' | 'long'
-});
-```
+- 💬 useAIChat: multi-turn conversation
+- ⚡ useAIStream: token streaming
+- 👁️ useImageAnalysis: image and vision workflows
+- 📝 useAIForm: AI-assisted form validation
+- 🎙️ useAIVoice: speech-to-text plus AI response
+- 🌍 useAITranslate: real-time translation
+- 📄 useAISummarize: concise text summaries
+- 🧠 useAICode: generate and explain code
 
 ## Provider Support
 
 | Provider | Chat | Stream | Vision | Voice |
-|----------|------|--------|--------|-------|
-| Claude (Anthropic) | ✅ | ✅ | ✅ | ✅ |
+|---|---|---|---|---|
+| Anthropic Claude | ✅ | ✅ | ✅ | ✅ |
 | OpenAI | ✅ | ✅ | ✅ | ✅ |
 | Gemini | ✅ | ✅ | 🔜 | 🔜 |
 
-## Architecture
+## Security
 
-- **Unified provider abstraction** — same API regardless of Claude, GPT, or Gemini
-- **Exponential backoff** — automatic retry on rate limits (429) and server errors
-- **AbortController** — cancel in-flight requests instantly
-- **TypeScript-first** — 20+ strict interfaces, no implicit `any`
-- **Zero dependencies** — only React and React Native
-
-## ⚠️ Security
-
-Never expose API keys in client-side code. Use a backend proxy:
+Use a backend proxy in production. Do not ship permanent provider API keys in app binaries.
 
 ```tsx
-// ✅ Safe — proxy your requests
-const { messages, sendMessage } = useAIChat({
+const { sendMessage } = useAIChat({
   baseUrl: 'https://your-backend.com/api/ai',
 });
-
-// ❌ Never do this in production
-const { messages } = useAIChat({ apiKey: 'sk-...' });
 ```
 
 ## Example App
 
-A full example app is included in `/example` — Settings screen, Chat UI, multi-provider switching.
+See [example](./example) for a full app with provider switching, API key settings, and streaming chat.
+
+## Deep Technical Docs
+
+Detailed architecture and implementation references now live in [docs](./docs):
+
+- [Architecture Guide](./docs/ARCHITECTURE_GUIDE.md)
+- [Technical Specification](./docs/TECHNICAL_SPECIFICATION.md)
+- [Implementation Summary](./docs/IMPLEMENTATION_COMPLETE.md)
+- [Internal Architecture Notes](./docs/ARCHITECTURE.md)
 
 ## License
 

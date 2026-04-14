@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState, useMemo } from 'react';
+import { useCallback, useRef, useState, useMemo, useEffect } from 'react';
 import type { UseAIFormOptions, UseAIFormReturn, FormValidationRequest, FormValidationResult } from '../types';
 import { createProvider } from '../utils/providerFactory';
 
@@ -117,7 +117,7 @@ export function useAIForm(options: UseAIFormOptions): UseAIFormReturn {
     [provider, options],
   );
 
-  useState(() => {
+  useEffect(() => {
     isMountedRef.current = true;
     return () => {
       isMountedRef.current = false;

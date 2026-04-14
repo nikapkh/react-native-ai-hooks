@@ -88,8 +88,8 @@
 ### Documentation (2)
 | File | Purpose | Status |
 |------|---------|--------|
-| `src/ARCHITECTURE.md` | Internal architecture details | ✅ Complete |
-| `ARCHITECTURE_GUIDE.md` | Developer & maintainer guide | ✅ Complete |
+| `docs/ARCHITECTURE.md` | Internal architecture details | ✅ Complete |
+| `docs/ARCHITECTURE_GUIDE.md` | Developer & maintainer guide | ✅ Complete |
 
 ---
 

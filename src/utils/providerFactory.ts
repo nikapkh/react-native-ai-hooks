@@ -94,11 +94,17 @@ export class ProviderFactory {
       },
     );
 
-    const data = (await response.json()) as AnthropicResponse;
-
     if (!response.ok) {
-      throw new Error(data?.error?.message || `Anthropic API error: ${response.status}`);
+      let errorData: any;
+      try {
+        errorData = await response.json();
+      } catch {
+        errorData = undefined;
+      }
+      throw new Error(errorData?.error?.message || 'API error');
     }
+
+    const data = (await response.json()) as AnthropicResponse;
 
     return this.normalizeAnthropicResponse(data);
   }
@@ -111,7 +117,6 @@ export class ProviderFactory {
       model: this.config.model,
       max_tokens: request.options?.maxTokens || 1024,
       temperature: request.options?.temperature ?? 0.7,
-      system: request.options?.system,
       messages: this.buildOpenAIMessages(request),
     };
 
@@ -131,11 +136,17 @@ export class ProviderFactory {
       },
     );
 
-    const data = (await response.json()) as OpenAIResponse;
-
     if (!response.ok) {
-      throw new Error(data?.error?.message || `OpenAI API error: ${response.status}`);
+      let errorData: any;
+      try {
+        errorData = await response.json();
+      } catch {
+        errorData = undefined;
+      }
+      throw new Error(errorData?.error?.message || 'API error');
     }
+
+    const data = (await response.json()) as OpenAIResponse;
 
     return this.normalizeOpenAIResponse(data);
   }
@@ -167,11 +178,17 @@ export class ProviderFactory {
       },
     );
 
-    const data = (await response.json()) as GeminiResponse;
-
     if (!response.ok) {
-      throw new Error(data?.error?.message || `Gemini API error: ${response.status}`);
+      let errorData: any;
+      try {
+        errorData = await response.json();
+      } catch {
+        errorData = undefined;
+      }
+      throw new Error(errorData?.error?.message || 'API error');
     }
+
+    const data = (await response.json()) as GeminiResponse;
 
     return this.normalizeGeminiResponse(data);
   }
@@ -185,9 +202,15 @@ export class ProviderFactory {
 
   private buildOpenAIMessages(
     request: ProviderRequest,
-  ): Array<{ role: 'user' | 'assistant'; content: string }> {
+  ): Array<{ role: 'system' | 'user' | 'assistant'; content: string }> {
     const messages = request.context || [];
-    return [...messages, { role: 'user', content: request.prompt }];
+    const promptMessage = { role: 'user' as const, content: request.prompt };
+
+    if (request.options?.system) {
+      return [{ role: 'system', content: request.options.system }, ...messages, promptMessage];
+    }
+
+    return [...messages, promptMessage];
   }
 
   private buildGeminiMessages(request: ProviderRequest): Array<{ role: string; parts: Array<{ text: string }> }> {
